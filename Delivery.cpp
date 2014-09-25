@@ -10,9 +10,10 @@
 
 class Problem {
 public:
-	Problem(Location start, Location goal) {
+	Problem(Location start, Location goal, std::vector<std::vector<int>> edges) {
 		s = start;
 		g = goal;
+		e = edges;
 	}
 
 	Location getStart() {
@@ -23,22 +24,30 @@ public:
 		return g;
 	}
 
+	std::vector<std::vector<int>> getEdges() {
+		return e;
+	}
+
 private:
 	Location s;
 	Location g;
-}
+	std::vector<std::vector<int>> e;
+};
 
 
 class Node {
 public:
 	Node() {
-		s = 0;
+		std::pair<int, int> startPair;
+		s = (Location) startPair;
 		pc = 0;
+		p = NULL;
 	}
 	
-	Node(Location state, int pathCost) {
+	Node(Location state, int pathCost, Node *parent) {
 		s = state;
 		pc = pathCost;
+		p = parent;
 	}
 	
 	bool operator() (const Node& n1, const Node& n2) {
@@ -53,41 +62,128 @@ public:
 		return pc;
 	}
 
+	Node *getParent() {
+		return p;
+	}
+
 private:
 	Location s;
 	int pc;
+	Node *p;
 };
 
 
-std::vector<std::pair<int,int>> aStar(Problem problem) {
-	Node startNode(problem.getStart(), 0);
-
-	std::priority_queue<Node, std::vector<Node>, Node> frontier;
-	frontier.push(startNode);
-
-	std::set<Location> explored;
-
-	while(true) {
-		if (frontier.empty()) {
-			return NULL;
-		}
-		
-		Node node = frontier.top();
-		frontier.pop();
-
-		if (node.getState() == problem.getGoal()) {
-			return solution(node); // TBI
-		}
-
-		explored.insert(node.getState);
-		
-		// Find children of node
-		// Iterate over them
-			// If the child is not in explored or frontier, insert the child into the frontier
-			// Else if the child is in frontier with higher path cost, replace that node with the child
+std::vector<std::pair<int, int>> solution(Node node) {
+	std::vector<std::pair<int, int>> solutionPath;
+	Node *currentNode = &node;
+	while (currentNode != NULL) {
+		std::pair<int, int> currentLocation = (*currentNode).getState();
+		solutionPath.insert(solutionPath.begin(), currentLocation);
+		currentNode = (*currentNode).getParent();
 	}
+	return solutionPath;
 }
 
+
+//returns the edge between node1 and node2
+Location nodesToEdge(Location node1, Location node2){
+    int y1 = node1.first;
+    int x1 = node1.second;
+    int y2 = node2.first;
+    int x2 = node2.second;
+
+    Location edge;
+
+    if(y1==y2){
+        edge.first = 2*y1; 
+        edge.second = std::min(x1,x2);
+    }
+    else if(x1==x2){
+        edge.first = y1+y2;
+        edge.second = x1;
+    }
+    else{
+        //nodes not adjecent
+    }
+    return edge;
+}
+
+
+//makes a path of nodes into a path of edges
+std::vector<Location> nodeToEdgePath(std::vector<Location> nodes){
+    int length = nodes.size() - 1;
+    std::vector<Location> edges;
+    for(int i = 0; i < length; i++){
+        edges[i] = nodesToEdge(nodes[i],nodes[i+1]); 
+    }
+    return edges;
+}
+
+
+
+
+//std::vector<std::pair<int, int>> aStar(Problem problem) {
+//	Node startNode(problem.getStart(), 0, NULL);
+//
+//	std::set<Node> frontier;
+//	frontier.insert(startNode);
+//
+//	std::set<Location> explored;
+//
+//	while(true) {
+//		if (frontier.empty()) {
+//			std::vector<std::pair<int,int>> emptySolution;
+//			return emptySolution;
+//		}
+//		
+//		Node node = frontier.top();
+//		frontier.pop();
+//
+//		if (node.getState() == problem.getGoal()) {
+//			return solution(node);
+//		}
+//
+//		explored.insert(node.getState());
+//
+//		Location state = node.getState();
+//		int yCoordinate = state.first;
+//		int xCoordinate = state.second;
+//		if (yCoordinate != 0) {
+//			Location northLocation(yCoordinate - 1, xCoordinate);
+//			if (!explored.count(northLocation) && !frontier.count(northLocation)) {
+//				// DO SOMETHING
+//
+//			}
+//		}
+//		
+//		// Find children of node
+//		// Iterate over them
+//			// If the child is not in explored or frontier, insert the child into the frontier
+//			// Else if the child is in frontier with higher path cost, replace that node with the child
+//	}
+//}
+
+
+// Martin's test version of main. Comment out if not needed.
+//int _tmain(int argc, _TCHAR* argv[]) {
+//
+//	std::pair<int, int> firstPair(3, 6);
+//	Location firstLocation = (Location) firstPair;
+//	Node firstNode(firstLocation, 3, NULL);
+//
+//	std::pair<int, int> secondPair(1, 8);
+//	Location secondLocation = (Location) secondPair;
+//	Node secondNode(secondLocation, 4, &firstNode);
+//
+//	std::pair<int, int> thirdPair(7, 8);
+//	Location thirdLocation = (Location) thirdPair;
+//	Node thirdNode(thirdLocation, 4, &secondNode);
+//
+//	std::vector<std::pair<int, int>> path = solution(thirdNode);
+//	for (unsigned int i = 0; i < path.size(); i++) {
+//		std::cout << "Coordinate pair " << i << "\n" << "y: " << path[i].first << "\n" << "x: " << path[i].second << "\n";
+//	}
+//}
 
 
 
@@ -336,8 +432,3 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	return 0;
 }
-
-
-
-
-
