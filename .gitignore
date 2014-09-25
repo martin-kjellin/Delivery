@@ -6,7 +6,6 @@
 *.filters
 *.user
 *.txt
-*.cpp
 *.h
 *.ipch
 *.tlog
