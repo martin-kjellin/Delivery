@@ -9,3 +9,14 @@
 *.cpp
 *.h
 *.ipch
+*.tlog
+*.lastbuildstate
+*.log
+*.unsuccessfulbuild
+*.cache
+*.dll
+*.lib
+*.exe
+*.obj
+*.idb
+*.pdb
