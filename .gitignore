@@ -19,3 +19,5 @@
 *.obj
 *.idb
 *.pdb
+Delivery/stdafx.cpp
+Delivery/Debug/Json Library.cpp
