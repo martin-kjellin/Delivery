@@ -1,0 +1,28 @@
+*.opensdf
+*.sdf
+*.sln
+*.suo
+*.vcxproj
+*.filters
+*.user
+*.txt
+*.h
+*.ipch
+*.tlog
+*.lastbuildstate
+*.log
+*.unsuccessfulbuild
+*.cache
+*.dll
+*.lib
+*.exe
+*.obj
+*.idb
+*.pdb
+Delivery/stdafx.cpp
+Delivery/Debug/Json Library.cpp
+*.ilk
+Debug/Json Library.cpp
+*.manifest
+*.res
+*.rc
