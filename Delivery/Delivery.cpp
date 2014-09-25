@@ -276,8 +276,6 @@ int _tmain(int argc, _TCHAR* argv[])
 			std::wcout << L"Package " << i << " location: " << waitingDeliveries[i].pickUp.first << ", " << waitingDeliveries[i].pickUp.second << L"\n";
 		}
 
-		/////////////////////////
-
 		std::list<VanInfo> availableVans;
 		for(int i = 0; i < vans.size(); i++){
 			VanInfo currentVan = vans[i];
@@ -302,7 +300,13 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		int j = 0;
 		while(!availableVans.empty() &&  j < waitingDeliveries.size()){
-			///////
+			
+			//find closest van in available list
+			//calculate route from closest van to pickup point
+			//send Instructions to closest van
+
+
+			/////////////////////THIS PART IS NOT DONE////////////////////////
 			if(waitingDeliveries.size()+activeDeliveries.size()-deliveriesBeingMade>0) {
 				int whichVan = closestVan(waitingDeliveries[0].pickUp,vans);
 				if(!whichVan==-1) {
@@ -311,15 +315,10 @@ int _tmain(int argc, _TCHAR* argv[])
 					deliveriesBeingMade++;
 				}
 			}
-			//////
+			////////////////////////////////////////////////////////////////
 
-			//find closest van in available list
-			//calculate route from closest van to pickup point
-			//send Instructions to closest van
 			j++;
 		}
-
-		////////////////////
 	}
 
 	return 0;
