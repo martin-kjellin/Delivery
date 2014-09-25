@@ -12,7 +12,6 @@
 #pragma comment (lib, "DeliveryManClient")
 
 std::map<int,std::vector<std::pair<int,int>>> vanInstructions;
-//bool once = true;
 int deliveriesBeingMade = 0;
 
 
