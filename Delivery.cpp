@@ -5,6 +5,8 @@
 #include <queue>
 #include <set>
 #include <utility>
+#include <time.h> // Added for randomness
+#include <stdlib.h> // Added for randomness
 #include "DeliveryManClient.h"
 #pragma comment (lib, "DeliveryManClient")
 
@@ -58,10 +60,123 @@ public:
 		return edgeCost;
 	}
 
-	int getEstimatedCostToGoal(Location from) { // This is the place where we should do something clever
-		int yDistance = abs(g.first - from.first);
-		int xDistance = abs(g.second - from.second);
-		int estimatedPathCost = yDistance + xDistance;
+	// Estimate the path cost to be the average of two of the possible paths
+	int getEstimatedCostToGoal(Location from) {
+		int estimatedPathCost;
+
+		if (from.first <= g.first && from.second <= g.second) { // from node is northwest of goal node 
+			
+			// Cost of going first east, then south to reach the goal
+			int eastSouthCost = 0;
+			for (int x = from.second; x < g.second; x++) {
+				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x + 1));
+				eastSouthCost += e[edge.first][edge.second];
+			}
+			for (int y = from.first; y < g.first; y++) {
+				Location edge = nodesToEdge(Location(y, g.second), Location(y + 1, g.second));
+				eastSouthCost += e[edge.first][edge.second];
+			}
+
+			// Cost of going first south, then east to reach the goal
+			int southEastCost = 0;
+			for (int y = from.first; y < g.first; y++) {
+				Location edge = nodesToEdge(Location(y, from.second), Location(y + 1, from.second));
+				southEastCost += e[edge.first][edge.second];
+			}
+			for (int x = from.second; x < g.second; x++) {
+				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x + 1));
+				southEastCost += e[edge.first][edge.second];
+			}
+
+			estimatedPathCost = (eastSouthCost + southEastCost) / 2;
+		}
+
+		if (from.first >= g.first && from.second <= g.second) { // from node is southwest of goal node 
+			
+			// Cost of going first east, then north to reach the goal
+			int eastNorthCost = 0;
+			for (int x = from.second; x < g.second; x++) {
+				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x + 1));
+				eastNorthCost += e[edge.first][edge.second];
+			}
+			for (int y = from.first; y > g.first; y--) {
+				Location edge = nodesToEdge(Location(y, g.second), Location(y - 1, g.second));
+				eastNorthCost += e[edge.first][edge.second];
+			}
+
+			// Cost of going first north, then east to reach the goal
+			int northEastCost = 0;
+			for (int y = from.first; y > g.first; y--) {
+				Location edge = nodesToEdge(Location(y, from.second), Location(y - 1, from.second));
+				northEastCost += e[edge.first][edge.second];
+			}
+			for (int x = from.second; x < g.second; x++) {
+				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x + 1));
+				northEastCost += e[edge.first][edge.second];
+			}
+
+			estimatedPathCost = (eastNorthCost + northEastCost) / 2;
+		}
+
+		if (from.first >= g.first && from.second >= g.second) { // from node is southeast of goal node 
+			
+			// Cost of going first west, then north to reach the goal
+			int westNorthCost = 0;
+			for (int x = from.second; x > g.second; x--) {
+				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x - 1));
+				westNorthCost += e[edge.first][edge.second];
+			}
+			for (int y = from.first; y > g.first; y--) {
+				Location edge = nodesToEdge(Location(y, g.second), Location(y - 1, g.second));
+				westNorthCost += e[edge.first][edge.second];
+			}
+
+			// Cost of going first north, then west to reach the goal
+			int northWestCost = 0;
+			for (int y = from.first; y > g.first; y--) {
+				Location edge = nodesToEdge(Location(y, from.second), Location(y - 1, from.second));
+				northWestCost += e[edge.first][edge.second];
+			}
+			for (int x = from.second; x > g.second; x--) {
+				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x - 1));
+				northWestCost += e[edge.first][edge.second];
+			}
+
+			estimatedPathCost = (westNorthCost + northWestCost) / 2;
+		}
+
+		if (from.first <= g.first && from.second >= g.second) { // from node is northeast of goal node 
+			
+			// Cost of going first west, then south to reach the goal
+			int westSouthCost = 0;
+			for (int x = from.second; x > g.second; x--) {
+				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x - 1));
+				westSouthCost += e[edge.first][edge.second];
+			}
+			for (int y = from.first; y < g.first; y++) {
+				Location edge = nodesToEdge(Location(y, g.second), Location(y + 1, g.second));
+				westSouthCost += e[edge.first][edge.second];
+			}
+
+			// Cost of going first south, then west to reach the goal
+			int southWestCost = 0;
+			for (int y = from.first; y < g.first; y++) {
+				Location edge = nodesToEdge(Location(y, from.second), Location(y + 1, from.second));
+				southWestCost += e[edge.first][edge.second];
+			}
+			for (int x = from.second; x > g.second; x--) {
+				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x - 1));
+				southWestCost += e[edge.first][edge.second];
+			}
+
+			estimatedPathCost = (westSouthCost + southWestCost) / 2;
+		}
+
+		// Older solution, where the path cost was estimated to be equal to the number of edges
+		// int yDistance = abs(g.first - from.first);
+		// int xDistance = abs(g.second - from.second);
+		// int estimatedPathCost = yDistance + xDistance;
+		
 		return estimatedPathCost;
 	}
 
@@ -111,12 +226,15 @@ private:
 
 
 // Help function to aStar, returns the path to node
-std::vector<std::pair<int, int>> solution(Node node, Location start) {
+std::vector<std::pair<int, int>> solution(Node node) {
 	std::vector<std::pair<int, int>> solutionPath;
 	Node *currentNode = &node;
 	while (currentNode != NULL) {
 		std::pair<int, int> currentLocation = (*currentNode).getState();
 		solutionPath.insert(solutionPath.begin(), currentLocation);
+		//if (currentNode == (*currentNode).getParent()) {
+		//	std::cout << "EQUAL FROM SOLUTION!";
+		//}
 		currentNode = (*currentNode).getParent();
 	}
 	return solutionPath;
@@ -128,19 +246,39 @@ std::vector<std::pair<int, int>> solution(Node node, Location start) {
 void insertNodeIntoFrontier(Problem& problem, Node& previousNode, Location& insertLocation, std::set<Node, Node>& frontier, std::set<Location>& explored) {
 	int northPathCost = previousNode.getPathCost() + problem.getEdgeCost(previousNode.getState(), insertLocation) + problem.getEstimatedCostToGoal(insertLocation);
 	Node insertNode(insertLocation, northPathCost, &previousNode);
+	
+	//std::cout << "New node into frontier\n";
+	//std::cout << "Previous node: (" << previousNode.getState().first << ", " << previousNode.getState().second << ")\n";
+	//std::cout << "New node: (" << insertNode.getState().first << ", " << insertNode.getState().second << ")\n";
+	//std::cout << "Path cost for previous node: " << previousNode.getPathCost() << "\n";
+	//std::cout << "Edge cost between previous and new node: " << problem.getEdgeCost(previousNode.getState(), insertLocation) << "\n";
+	//std::cout << "Estimated cost from new node to goal: " << problem.getEstimatedCostToGoal(insertLocation);
+	//std::cout << "Path cost: " << insertNode.getPathCost() << "\n";
 
-	if (previousNode.getState() == insertNode.getState()) {
-		std::cout << "State x: " << previousNode.getState().first << "   y: " << previousNode.getState().second << "\n";
-	}
+	//std::cout << "In the set of explored: \n";
+	//for (std::set<Location>::iterator it = explored.begin(); it != explored.end(); it++) {
+	//	std::cout << "(" << (*it).first << ", " << (*it).second << ")\n";
+	//}
 
-	int nodeCount = 0;
+	//std::cout << "Pointer to previous node: " << &previousNode << "\n";
+	//std::cout << "Pointer to new node: " << &insertNode << "\n\n";
+
+	//std::cout << "In the frontier: \n";
+	//for (std::set<Node, Node>::iterator it = frontier.begin(); it != frontier.end(); it++) {
+	//	Node nn = *it;
+	//	std::cout << "(" << nn.getState().first << ", " << nn.getState().second << ")\n";
+	//}
+
+	bool frontierHasInsertNode = FALSE;
 	for (std::set<Node, Node>::iterator it = frontier.begin(); it != frontier.end(); it++) {
 		Node currentNode = *it;
 		if (currentNode.getState() == insertNode.getState()) {
-			nodeCount++;
+			//std::cout << "Node already in frontier\n";
+			frontierHasInsertNode = TRUE;
 		}
 	}
-	if (!nodeCount) {
+	//std::cout << "\n";
+	if (!frontierHasInsertNode) {
 		if (!explored.count(insertNode.getState())) {
 			frontier.insert(insertNode);
 		}
@@ -157,6 +295,7 @@ void insertNodeIntoFrontier(Problem& problem, Node& previousNode, Location& inse
 }
 
 
+// The A* algorithm
 std::vector<std::pair<int, int>> aStar(Problem problem) {
 	Location startLocation = problem.getStart();
 	Node startNode(problem.getStart(), problem.getEstimatedCostToGoal(startLocation), NULL);
@@ -164,19 +303,17 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 	// The frontier (works as both a priority queue and a set)
 	std::set<Node, Node> frontier;
 	frontier.insert(startNode);
-	std::cout << "Size of frontier: " << frontier.size();
+	//std::cout << "Size of frontier: " << frontier.size();
 
 	// The explored set
 	std::set<Location> explored;
 
-	std::vector<std::pair<int, int>> returnValue; //
+	std::vector<std::pair<int, int>> returnValue;
+
 	while(true) {
-		if (frontier.empty()) { // No solution to the problem was found
-			std::vector<std::pair<int, int>> emptySolution;
-			//return emptySolution;
-			std::cout << "Empty solution\n";
-			returnValue = emptySolution; //
-			break; //
+		if (frontier.empty()) { // No solution to the problem was found (this should never happen)
+			//std::cout << "Empty solution\n";
+			break;
 		} else {
 			// Get the lowest-cost node of the frontier
 			std::set<Node, Node>::iterator lowestIterator = frontier.begin();
@@ -184,17 +321,18 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 			frontier.erase(lowestIterator);
 
 			if (node.getState() == problem.getGoal()) { // The goal is reached
-				//return solution(node);
-				returnValue = solution(node, problem.getStart()); //
-				break; //
+				std::vector<std::pair<int, int>> solutionNodes = solution(node);
+				for (std::vector<std::pair<int, int>>::iterator it = solutionNodes.begin(); (it + 1) != solutionNodes.end(); it++) {
+					Location edge = nodesToEdge(*it, *(it + 1));
+					returnValue.push_back(edge);
+				}
+				break;
 			} else {
 				Location location = node.getState();
 
 				explored.insert(location);
 
-				int problemSize = 40;
-//				int problemSize = problem.getEdges().size();
-//				std::cout << "Problem size: " << problemSize << "\n";
+				int problemSize = 41;
 				int yCoordinate = location.first;
 				int xCoordinate = location.second;
 				
@@ -225,7 +363,7 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 }
 
 
-// Martin's test version of main. Comment out if not needed.
+// Test version of main, prints a path of nodes. Comment out if not needed.
 //int _tmain(int argc, _TCHAR* argv[]) {
 //
 //	std::pair<int, int> firstPair(3, 6);
@@ -248,8 +386,7 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 
 
 
-
-// === BELOW IS SVERRIR'S WORKING CODE ===
+// === BELOW IS CODE THAT WORKS WITHOUT A* ===
 
 
 std::map<int,std::vector<std::pair<int,int>>> vanInstructions;
@@ -330,10 +467,17 @@ int closestVan(Location package, std::vector<VanInfo> vans) {
 }
 
 void movePackage(int vanNumber, Location package, std::vector<VanInfo> vans, std::vector<std::vector<int>> edges) {
+	// Below is code that uses A*
+
 	Problem problem(vans[vanNumber].location, package, edges);
 	std::vector<std::pair<int,int>> path = aStar(problem);
 	
+	// End of code that uses A*
 
+
+	// Below is code that works, but that doesn't use A* and isn't fast enough
+
+	//std::vector<std::pair<int,int>> path;
 	//std::pair<int,int> trip;
 	//int vanLocFirst = vans[vanNumber].location.first;
 	//int vanLocSecond = vans[vanNumber].location.second;
@@ -367,13 +511,15 @@ void movePackage(int vanNumber, Location package, std::vector<VanInfo> vans, std
 	//	}
 	//}
 
+	// End of code that doesn't use A*
 
-
+	
 	vanInstructions[vanNumber]=path;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	srand(time(NULL)); // Added for randomness
 	std::wcout << L"Hello and welcome!\n";
 
 	// Create client
@@ -452,9 +598,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			std::wcout << L"Packages on board: " << waitingDeliveries.size() + activeDeliveries.size() << L"\n";
 			std::wcout << L"Completed deliveries: " << completedDeliveries.size() << L"\n";
 
-			//for(int i=0;i<waitingDeliveries.size();i++) {
-			//	std::wcout << L"Package " << waitingDeliveries[i].Number << " location: " << waitingDeliveries[i].pickUp.first << ", " << waitingDeliveries[i].pickUp.second << L"\n";
-			//}
+			for(int i=0;i<waitingDeliveries.size();i++) {
+				std::wcout << L"Package " << waitingDeliveries[i].Number << " location: " << waitingDeliveries[i].pickUp.first << ", " << waitingDeliveries[i].pickUp.second << L"\n";
+			}
 
 			if(once) {
 				spread();
