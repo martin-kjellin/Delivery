@@ -30,6 +30,7 @@ Location nodesToEdge(Location node1, Location node2) {
 	int y2 = node2.first;
 	int x2 = node2.second;
 	Location edge;
+
 	if (y1 == y2) { // East--west edge
 		edge.first = 2 * y1;
 		edge.second = min(x1, x2);
@@ -37,6 +38,7 @@ Location nodesToEdge(Location node1, Location node2) {
 		edge.first = y1 + y2;
 		edge.second = x1;
 	}
+
 	return edge;
 }
 
@@ -48,15 +50,19 @@ public:
 		g = goal;
 		e = edges;
 	}
+
 	Location getStart() {
 		return s;
 	}
+
 	Location getGoal() {
 		return g;
 	}
+
 	std::vector<std::vector<int>> getEdges() {
 		return e;
 	}
+
 	int getEdgeCost(Location node, Location adjacentNode) { // Only to be used for adjacent nodes
 		Location edge = nodesToEdge(node, adjacentNode);
 		int yCoordinate = edge.first;
@@ -64,107 +70,123 @@ public:
 		int edgeCost = e[yCoordinate][xCoordinate];
 		return edgeCost;
 	}
+
 	// Estimate the path cost to be the average of two of the possible paths
 	int getEstimatedCostToGoal(Location from) {
-		int estimatedPathCost;
-		if (from.first <= g.first && from.second <= g.second) { // from node is northwest of goal node
-			// Cost of going first east, then south to reach the goal
-			int eastSouthCost = 0;
-			for (int x = from.second; x < g.second; x++) {
-				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x + 1));
-				eastSouthCost += e[edge.first][edge.second];
-			}
-			for (int y = from.first; y < g.first; y++) {
-				Location edge = nodesToEdge(Location(y, g.second), Location(y + 1, g.second));
-				eastSouthCost += e[edge.first][edge.second];
-			}
-			// Cost of going first south, then east to reach the goal
-			int southEastCost = 0;
-			for (int y = from.first; y < g.first; y++) {
-				Location edge = nodesToEdge(Location(y, from.second), Location(y + 1, from.second));
-				southEastCost += e[edge.first][edge.second];
-			}
-			for (int x = from.second; x < g.second; x++) {
-				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x + 1));
-				southEastCost += e[edge.first][edge.second];
-			}
-			estimatedPathCost = (eastSouthCost + southEastCost) / 2;
-		}
-		if (from.first >= g.first && from.second <= g.second) { // from node is southwest of goal node
-			// Cost of going first east, then north to reach the goal
-			int eastNorthCost = 0;
-			for (int x = from.second; x < g.second; x++) {
-				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x + 1));
-				eastNorthCost += e[edge.first][edge.second];
-			}
-			for (int y = from.first; y > g.first; y--) {
-				Location edge = nodesToEdge(Location(y, g.second), Location(y - 1, g.second));
-				eastNorthCost += e[edge.first][edge.second];
-			}
-			// Cost of going first north, then east to reach the goal
-			int northEastCost = 0;
-			for (int y = from.first; y > g.first; y--) {
-				Location edge = nodesToEdge(Location(y, from.second), Location(y - 1, from.second));
-				northEastCost += e[edge.first][edge.second];
-			}
-			for (int x = from.second; x < g.second; x++) {
-				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x + 1));
-				northEastCost += e[edge.first][edge.second];
-			}
-			estimatedPathCost = (eastNorthCost + northEastCost) / 2;
-		}
-		if (from.first >= g.first && from.second >= g.second) { // from node is southeast of goal node
-			// Cost of going first west, then north to reach the goal
-			int westNorthCost = 0;
-			for (int x = from.second; x > g.second; x--) {
-				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x - 1));
-				westNorthCost += e[edge.first][edge.second];
-			}
-			for (int y = from.first; y > g.first; y--) {
-				Location edge = nodesToEdge(Location(y, g.second), Location(y - 1, g.second));
-				westNorthCost += e[edge.first][edge.second];
-			}
-			// Cost of going first north, then west to reach the goal
-			int northWestCost = 0;
-			for (int y = from.first; y > g.first; y--) {
-				Location edge = nodesToEdge(Location(y, from.second), Location(y - 1, from.second));
-				northWestCost += e[edge.first][edge.second];
-			}
-			for (int x = from.second; x > g.second; x--) {
-				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x - 1));
-				northWestCost += e[edge.first][edge.second];
-			}
-			estimatedPathCost = (westNorthCost + northWestCost) / 2;
-		}
-		if (from.first <= g.first && from.second >= g.second) { // from node is northeast of goal node
-			// Cost of going first west, then south to reach the goal
-			int westSouthCost = 0;
-			for (int x = from.second; x > g.second; x--) {
-				Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x - 1));
-				westSouthCost += e[edge.first][edge.second];
-			}
-			for (int y = from.first; y < g.first; y++) {
-				Location edge = nodesToEdge(Location(y, g.second), Location(y + 1, g.second));
-				westSouthCost += e[edge.first][edge.second];
-			}
-			// Cost of going first south, then west to reach the goal
-			int southWestCost = 0;
-			for (int y = from.first; y < g.first; y++) {
-				Location edge = nodesToEdge(Location(y, from.second), Location(y + 1, from.second));
-				southWestCost += e[edge.first][edge.second];
-			}
-			for (int x = from.second; x > g.second; x--) {
-				Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x - 1));
-				southWestCost += e[edge.first][edge.second];
-			}
-			estimatedPathCost = (westSouthCost + southWestCost) / 2;
-		}
+		//int estimatedPathCost;
+
+		//if (from.first <= g.first && from.second <= g.second) { // from node is northwest of goal node
+		//	// Cost of going first east, then south to reach the goal
+		//	int eastSouthCost = 0;
+		//	for (int x = from.second; x < g.second; x++) {
+		//		Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x + 1));
+		//		eastSouthCost += e[edge.first][edge.second];
+		//	}
+		//	for (int y = from.first; y < g.first; y++) {
+		//		Location edge = nodesToEdge(Location(y, g.second), Location(y + 1, g.second));
+		//		eastSouthCost += e[edge.first][edge.second];
+		//	}
+
+		//	// Cost of going first south, then east to reach the goal
+		//	int southEastCost = 0;
+		//	for (int y = from.first; y < g.first; y++) {
+		//		Location edge = nodesToEdge(Location(y, from.second), Location(y + 1, from.second));
+		//		southEastCost += e[edge.first][edge.second];
+		//	}
+		//	for (int x = from.second; x < g.second; x++) {
+		//		Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x + 1));
+		//		southEastCost += e[edge.first][edge.second];
+		//	}
+
+		//	estimatedPathCost = (eastSouthCost + southEastCost) / 2;
+		//}
+
+		//if (from.first >= g.first && from.second <= g.second) { // from node is southwest of goal node
+		//	// Cost of going first east, then north to reach the goal
+		//	int eastNorthCost = 0;
+		//	for (int x = from.second; x < g.second; x++) {
+		//		Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x + 1));
+		//		eastNorthCost += e[edge.first][edge.second];
+		//	}
+		//	for (int y = from.first; y > g.first; y--) {
+		//		Location edge = nodesToEdge(Location(y, g.second), Location(y - 1, g.second));
+		//		eastNorthCost += e[edge.first][edge.second];
+		//	}
+
+		//	// Cost of going first north, then east to reach the goal
+		//	int northEastCost = 0;
+		//	for (int y = from.first; y > g.first; y--) {
+		//		Location edge = nodesToEdge(Location(y, from.second), Location(y - 1, from.second));
+		//		northEastCost += e[edge.first][edge.second];
+		//	}
+		//	for (int x = from.second; x < g.second; x++) {
+		//		Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x + 1));
+		//		northEastCost += e[edge.first][edge.second];
+		//	}
+
+		//	estimatedPathCost = (eastNorthCost + northEastCost) / 2;
+		//}
+
+		//if (from.first >= g.first && from.second >= g.second) { // from node is southeast of goal node
+		//	// Cost of going first west, then north to reach the goal
+		//	int westNorthCost = 0;
+		//	for (int x = from.second; x > g.second; x--) {
+		//		Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x - 1));
+		//		westNorthCost += e[edge.first][edge.second];
+		//	}
+		//	for (int y = from.first; y > g.first; y--) {
+		//		Location edge = nodesToEdge(Location(y, g.second), Location(y - 1, g.second));
+		//		westNorthCost += e[edge.first][edge.second];
+		//	}
+
+		//	// Cost of going first north, then west to reach the goal
+		//	int northWestCost = 0;
+		//	for (int y = from.first; y > g.first; y--) {
+		//		Location edge = nodesToEdge(Location(y, from.second), Location(y - 1, from.second));
+		//		northWestCost += e[edge.first][edge.second];
+		//	}
+		//	for (int x = from.second; x > g.second; x--) {
+		//		Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x - 1));
+		//		northWestCost += e[edge.first][edge.second];
+		//	}
+
+		//	estimatedPathCost = (westNorthCost + northWestCost) / 2;
+		//}
+
+		//if (from.first <= g.first && from.second >= g.second) { // from node is northeast of goal node
+		//	// Cost of going first west, then south to reach the goal
+		//	int westSouthCost = 0;
+		//	for (int x = from.second; x > g.second; x--) {
+		//		Location edge = nodesToEdge(Location(from.first, x), Location(from.first, x - 1));
+		//		westSouthCost += e[edge.first][edge.second];
+		//	}
+		//	for (int y = from.first; y < g.first; y++) {
+		//		Location edge = nodesToEdge(Location(y, g.second), Location(y + 1, g.second));
+		//		westSouthCost += e[edge.first][edge.second];
+		//	}
+
+		//	// Cost of going first south, then west to reach the goal
+		//	int southWestCost = 0;
+		//	for (int y = from.first; y < g.first; y++) {
+		//		Location edge = nodesToEdge(Location(y, from.second), Location(y + 1, from.second));
+		//		southWestCost += e[edge.first][edge.second];
+		//	}
+		//	for (int x = from.second; x > g.second; x--) {
+		//		Location edge = nodesToEdge(Location(g.first, x), Location(g.first, x - 1));
+		//		southWestCost += e[edge.first][edge.second];
+		//	}
+
+		//	estimatedPathCost = (westSouthCost + southWestCost) / 2;
+		//}
+
 		// Older solution, where the path cost was estimated to be equal to the number of edges
-		//int yDistance = abs(g.first - from.first);
-		//int xDistance = abs(g.second - from.second);
-		//int estimatedPathCost = yDistance + xDistance;
+		int yDistance = abs(g.first - from.first);
+		int xDistance = abs(g.second - from.second);
+		int estimatedPathCost = yDistance + xDistance;
+		
 		return estimatedPathCost;
 	}
+
 private:
 	Location s;
 	Location g;
@@ -181,27 +203,34 @@ public:
 		pc = 0;
 		p = NULL;
 	}
+
 	Node(Location state, int pathCostToNode, int pathCost, Node *parent) {
 		s = state;
 		tc = pathCostToNode;
 		pc = pathCost;
 		p = parent;
 	}
+
 	bool operator() (const Node& n1, const Node& n2) const {
 		return n1.pc < n2.pc;
 	}
+
 	Location getState() {
 		return s;
 	}
+
 	int getPathCostToNode() {
 		return tc;
 	}
+
 	int getPathCost() {
 		return pc;
 	}
+
 	Node *getParent() {
 		return p;
 	}
+
 private:
 	Location s;
 	int tc;
@@ -213,6 +242,7 @@ private:
 // Help function to aStar, returns the path to node
 std::vector<std::pair<int, int>> solution(Node *node) {
 	std::vector<std::pair<int, int>> solutionPath;
+	
 	while (node != NULL) {
 		std::pair<int, int> currentLocation = (*node).getState();
 		solutionPath.insert(solutionPath.begin(), currentLocation);
@@ -220,6 +250,7 @@ std::vector<std::pair<int, int>> solution(Node *node) {
 		node = (*node).getParent();
 		delete oldNode;
 	}
+
 	return solutionPath;
 }
 
@@ -230,6 +261,7 @@ void insertNodeIntoFrontier(Problem& problem, Node *previousNode, Location& inse
 	int pathCostToNode = (*previousNode).getPathCostToNode() + problem.getEdgeCost((*previousNode).getState(), insertLocation);
 	int pathCost = pathCostToNode + problem.getEstimatedCostToGoal(insertLocation);
 	Node insertNode(insertLocation, pathCostToNode, pathCost, previousNode);
+	
 	bool frontierHasInsertNode = false;
 	for (std::multiset<Node, Node>::iterator it = frontier.begin(); it != frontier.end(); it++) {
 		Node currentNode = *it;
@@ -237,6 +269,7 @@ void insertNodeIntoFrontier(Problem& problem, Node *previousNode, Location& inse
 			frontierHasInsertNode = true;
 		}
 	}
+
 	if (!frontierHasInsertNode) {
 		if (!explored.count(insertNode.getState())) {
 			frontier.insert(insertNode);
@@ -258,12 +291,16 @@ void insertNodeIntoFrontier(Problem& problem, Node *previousNode, Location& inse
 std::vector<std::pair<int, int>> aStar(Problem problem) {
 	Location startLocation = problem.getStart();
 	Node startNode(problem.getStart(), 0, problem.getEstimatedCostToGoal(startLocation), NULL);
+	
 	// The frontier (works as both a priority queue and a set)
 	std::multiset<Node, Node> frontier;
 	frontier.insert(startNode);
+	
 	// The explored set
 	std::set<Location> explored;
+	
 	std::vector<std::pair<int, int>> returnValue;
+	
 	while (true) {
 		if (frontier.empty()) { // No solution to the problem was found (this should never happen)
 			break;
@@ -273,6 +310,7 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 			Node *node = new Node;
 			*node = *lowestIterator;
 			frontier.erase(lowestIterator);
+
 			if ((*node).getState() == problem.getGoal()) { // The goal is reached
 				std::vector<std::pair<int, int>> solutionNodes = solution(node);
 				for (std::vector<std::pair<int, int>>::iterator it = solutionNodes.begin(); (it + 1) != solutionNodes.end(); it++) {
@@ -283,21 +321,26 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 			} else {
 				Location location = (*node).getState();
 				explored.insert(location);
+
 				int problemSize = 41;
 				int yCoordinate = location.first;
 				int xCoordinate = location.second;
+
 				if (yCoordinate > 0) { // Possible to move to the north
 					Location northLocation(yCoordinate - 1, xCoordinate);
 					insertNodeIntoFrontier(problem, node, northLocation, frontier, explored);
 				}
+
 				if (yCoordinate < problemSize - 1) { // Possible to move to the south
 					Location southLocation(yCoordinate + 1, xCoordinate);
 					insertNodeIntoFrontier(problem, node, southLocation, frontier, explored);
 				}
+
 				if (xCoordinate > 0) { // Possible to move to the west
 					Location westLocation(yCoordinate, xCoordinate - 1);
 					insertNodeIntoFrontier(problem, node, westLocation, frontier, explored);
 				}
+
 				if (xCoordinate < problemSize - 1) { // Possible to move to the east
 					Location eastLocation(yCoordinate, xCoordinate + 1);
 					insertNodeIntoFrontier(problem, node, eastLocation, frontier, explored);
@@ -305,6 +348,7 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 			}
 		}
 	}
+
 	return returnValue;
 }
 
@@ -401,7 +445,6 @@ int closestVan(Location package, std::vector<VanInfo> vans, int tid) { //Gives t
 
 
 void movePackage(int vanNumber, Location package, std::vector<VanInfo> vans, std::vector<std::vector<int>> edges) {
-
 	Problem problem(vans[vanNumber].location, package, edges);
 	vanInstructions[vanNumber] = aStar(problem);
 }
@@ -568,6 +611,8 @@ int mainMethod(int argc, _TCHAR* argv[]) {
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	srand (time(NULL)); // Added for randomness
+
 	while(true) {
 		mainMethod(argc, argv);
 	}
