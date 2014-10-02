@@ -173,9 +173,9 @@ public:
 		}
 
 		// Older solution, where the path cost was estimated to be equal to the number of edges
-		// int yDistance = abs(g.first - from.first);
-		// int xDistance = abs(g.second - from.second);
-		// int estimatedPathCost = yDistance + xDistance;
+		 //int yDistance = abs(g.first - from.first);
+		 //int xDistance = abs(g.second - from.second);
+		 //int estimatedPathCost = yDistance + xDistance;
 		
 		return estimatedPathCost;
 	}
@@ -192,12 +192,14 @@ public:
 	Node() {
 		std::pair<int, int> startPair;
 		s = (Location) startPair;
+		tc = 0;
 		pc = 0;
 		p = NULL;
 	}
 	
-	Node(Location state, int pathCost, Node *parent) {
+	Node(Location state, int pathCostToNode, int pathCost, Node *parent) {
 		s = state;
+		tc = pathCostToNode;
 		pc = pathCost;
 		p = parent;
 	}
@@ -208,6 +210,10 @@ public:
 	
 	Location getState() {
 		return s;
+	}
+
+	int getPathCostToNode() {
+		return tc;
 	}
 	
 	int getPathCost() {
@@ -220,22 +226,21 @@ public:
 
 private:
 	Location s;
+	int tc;
 	int pc;
 	Node *p;
 };
 
 
 // Help function to aStar, returns the path to node
-std::vector<std::pair<int, int>> solution(Node node) {
+std::vector<std::pair<int, int>> solution(Node *node) {
 	std::vector<std::pair<int, int>> solutionPath;
-	Node *currentNode = &node;
-	while (currentNode != NULL) {
-		std::pair<int, int> currentLocation = (*currentNode).getState();
+	while (node != NULL) {
+		std::pair<int, int> currentLocation = (*node).getState();
 		solutionPath.insert(solutionPath.begin(), currentLocation);
-		//if (currentNode == (*currentNode).getParent()) {
-		//	std::cout << "EQUAL FROM SOLUTION!";
-		//}
-		currentNode = (*currentNode).getParent();
+		Node *oldNode = node;
+		node = (*node).getParent();
+		delete oldNode;
 	}
 	return solutionPath;
 }
@@ -243,47 +248,25 @@ std::vector<std::pair<int, int>> solution(Node node) {
 
 // Help function to aStar, inserts a node into the frontier if the
 // conditions of A* are fulfilled
-void insertNodeIntoFrontier(Problem& problem, Node& previousNode, Location& insertLocation, std::set<Node, Node>& frontier, std::set<Location>& explored) {
-	int northPathCost = previousNode.getPathCost() + problem.getEdgeCost(previousNode.getState(), insertLocation) + problem.getEstimatedCostToGoal(insertLocation);
-	Node insertNode(insertLocation, northPathCost, &previousNode);
+void insertNodeIntoFrontier(Problem& problem, Node *previousNode, Location& insertLocation, std::multiset<Node, Node>& frontier, std::set<Location>& explored) {
+	int pathCostToNode = (*previousNode).getPathCostToNode() + problem.getEdgeCost((*previousNode).getState(), insertLocation);
+	int pathCost = pathCostToNode + problem.getEstimatedCostToGoal(insertLocation);
+	Node insertNode(insertLocation, pathCostToNode, pathCost, previousNode);
 	
-	//std::cout << "New node into frontier\n";
-	//std::cout << "Previous node: (" << previousNode.getState().first << ", " << previousNode.getState().second << ")\n";
-	//std::cout << "New node: (" << insertNode.getState().first << ", " << insertNode.getState().second << ")\n";
-	//std::cout << "Path cost for previous node: " << previousNode.getPathCost() << "\n";
-	//std::cout << "Edge cost between previous and new node: " << problem.getEdgeCost(previousNode.getState(), insertLocation) << "\n";
-	//std::cout << "Estimated cost from new node to goal: " << problem.getEstimatedCostToGoal(insertLocation);
-	//std::cout << "Path cost: " << insertNode.getPathCost() << "\n";
-
-	//std::cout << "In the set of explored: \n";
-	//for (std::set<Location>::iterator it = explored.begin(); it != explored.end(); it++) {
-	//	std::cout << "(" << (*it).first << ", " << (*it).second << ")\n";
-	//}
-
-	//std::cout << "Pointer to previous node: " << &previousNode << "\n";
-	//std::cout << "Pointer to new node: " << &insertNode << "\n\n";
-
-	//std::cout << "In the frontier: \n";
-	//for (std::set<Node, Node>::iterator it = frontier.begin(); it != frontier.end(); it++) {
-	//	Node nn = *it;
-	//	std::cout << "(" << nn.getState().first << ", " << nn.getState().second << ")\n";
-	//}
-
-	bool frontierHasInsertNode = FALSE;
-	for (std::set<Node, Node>::iterator it = frontier.begin(); it != frontier.end(); it++) {
+	bool frontierHasInsertNode = false;
+	for (std::multiset<Node, Node>::iterator it = frontier.begin(); it != frontier.end(); it++) {
 		Node currentNode = *it;
 		if (currentNode.getState() == insertNode.getState()) {
-			//std::cout << "Node already in frontier\n";
-			frontierHasInsertNode = TRUE;
+			frontierHasInsertNode = true;
 		}
 	}
-	//std::cout << "\n";
+
 	if (!frontierHasInsertNode) {
 		if (!explored.count(insertNode.getState())) {
 			frontier.insert(insertNode);
 		}
 	} else {
-		std::set<Node, Node>::iterator findIterator = frontier.find(insertNode);
+		std::multiset<Node, Node>::iterator findIterator = frontier.find(insertNode);
 		if (findIterator != frontier.end()) {
 			Node oldInsertNode = *findIterator;
 			if (oldInsertNode.getPathCost() > insertNode.getPathCost()) {
@@ -298,29 +281,28 @@ void insertNodeIntoFrontier(Problem& problem, Node& previousNode, Location& inse
 // The A* algorithm
 std::vector<std::pair<int, int>> aStar(Problem problem) {
 	Location startLocation = problem.getStart();
-	Node startNode(problem.getStart(), problem.getEstimatedCostToGoal(startLocation), NULL);
+	Node startNode(problem.getStart(), 0, problem.getEstimatedCostToGoal(startLocation), NULL);
 
 	// The frontier (works as both a priority queue and a set)
-	std::set<Node, Node> frontier;
+	std::multiset<Node, Node> frontier;
 	frontier.insert(startNode);
-	//std::cout << "Size of frontier: " << frontier.size();
 
 	// The explored set
 	std::set<Location> explored;
 
 	std::vector<std::pair<int, int>> returnValue;
 
-	while(true) {
+	while (true) {
 		if (frontier.empty()) { // No solution to the problem was found (this should never happen)
-			//std::cout << "Empty solution\n";
 			break;
 		} else {
 			// Get the lowest-cost node of the frontier
-			std::set<Node, Node>::iterator lowestIterator = frontier.begin();
-			Node node = *lowestIterator;
+			std::multiset<Node, Node>::iterator lowestIterator = frontier.begin();
+			Node *node = new Node;
+			*node = *lowestIterator;
 			frontier.erase(lowestIterator);
 
-			if (node.getState() == problem.getGoal()) { // The goal is reached
+			if ((*node).getState() == problem.getGoal()) { // The goal is reached
 				std::vector<std::pair<int, int>> solutionNodes = solution(node);
 				for (std::vector<std::pair<int, int>>::iterator it = solutionNodes.begin(); (it + 1) != solutionNodes.end(); it++) {
 					Location edge = nodesToEdge(*it, *(it + 1));
@@ -328,7 +310,7 @@ std::vector<std::pair<int, int>> aStar(Problem problem) {
 				}
 				break;
 			} else {
-				Location location = node.getState();
+				Location location = (*node).getState();
 
 				explored.insert(location);
 
@@ -523,7 +505,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::wcout << L"Hello and welcome!\n";
 
 	// Create client
-	std::wstring name = L"Group1";
+	std::wstring name = L"Sverrir, Sander, Martin och Malin";
 	bool OK;
 	DM_Client client(name, OK);
 
@@ -531,8 +513,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::vector<std::vector<std::wstring>> nodes;
 	std::wstring startOutput;
 	client.startGame(nodes, startOutput);
-	std::wcout << L"Node type at (10,10): " << nodes[40][40] << L"\n";
-	std::wcout << L"Output: " << startOutput << L"\n\n";
 
 	// Get information about the environment state
 	int time;
@@ -564,43 +544,44 @@ int _tmain(int argc, _TCHAR* argv[])
 	assignedDeliveries[3]=-1;
 	assignedDeliveries[4]=-1;
 
-	while(true) {
+	int compDeliveries = 0;
+
+	while (time < 1440 && compDeliveries < 20) {
 			waitingDeliveries.clear();
 			activeDeliveries.clear();
 			completedDeliveries.clear();
 			vans.clear();
 			edges.clear();
 			client.getInformation(time, edges, vans, waitingDeliveries, activeDeliveries, completedDeliveries, informationOutput);
-			std::wcout << "\n" << "\n";
 			std::wcout << L"Time: " << time << "\n";
 
-			std::wcout << L"Van 0 location: (" << vans[0].location.first << ", " << vans[0].location.second << L"), cargo: " << vans[0].cargo;
-			if (vans[0].instructions.size() > 0) {
-				std::wcout << ", instructions: (" << vans[0].instructions[0].first << ", " << vans[0].instructions[0].second << L") \n";
-			}
-			std::wcout << L"Van 1 location: (" << vans[1].location.first << ", " << vans[1].location.second << L"), cargo: " << vans[1].cargo;
-			if (vans[1].instructions.size() > 0) {
-				std::wcout << ", instructions: (" << vans[1].instructions[0].first << ", " << vans[1].instructions[0].second << L") \n";
-			}
-			std::wcout << L"Van 2 location: (" << vans[2].location.first << ", " << vans[2].location.second << L"), cargo: " << vans[2].cargo;
-			if (vans[2].instructions.size() > 0) {
-				std::wcout << ", instructions: (" << vans[2].instructions[0].first << ", " << vans[2].instructions[0].second << L") \n";
-			}
-			std::wcout << L"Van 3 location: (" << vans[3].location.first << ", " << vans[3].location.second << L"), cargo: " << vans[3].cargo;
-			if (vans[3].instructions.size() > 0) {
-				std::wcout << ", instructions: (" << vans[3].instructions[0].first << ", " << vans[3].instructions[0].second << L") \n";
-			}
-			std::wcout << L"Van 4 location: (" << vans[4].location.first << ", " << vans[4].location.second << L"), cargo: " << vans[4].cargo;
-			if (vans[4].instructions.size() > 0) {
-				std::wcout << ", instructions: (" << vans[4].instructions[0].first << ", " << vans[4].instructions[0].second << L") \n";
-			}
+			//std::wcout << L"Van 0 location: (" << vans[0].location.first << ", " << vans[0].location.second << L"), cargo: " << vans[0].cargo;
+			//if (vans[0].instructions.size() > 0) {
+			//	std::wcout << ", instructions: (" << vans[0].instructions[0].first << ", " << vans[0].instructions[0].second << L") \n";
+			//}
+			//std::wcout << L"Van 1 location: (" << vans[1].location.first << ", " << vans[1].location.second << L"), cargo: " << vans[1].cargo;
+			//if (vans[1].instructions.size() > 0) {
+			//	std::wcout << ", instructions: (" << vans[1].instructions[0].first << ", " << vans[1].instructions[0].second << L") \n";
+			//}
+			//std::wcout << L"Van 2 location: (" << vans[2].location.first << ", " << vans[2].location.second << L"), cargo: " << vans[2].cargo;
+			//if (vans[2].instructions.size() > 0) {
+			//	std::wcout << ", instructions: (" << vans[2].instructions[0].first << ", " << vans[2].instructions[0].second << L") \n";
+			//}
+			//std::wcout << L"Van 3 location: (" << vans[3].location.first << ", " << vans[3].location.second << L"), cargo: " << vans[3].cargo;
+			//if (vans[3].instructions.size() > 0) {
+			//	std::wcout << ", instructions: (" << vans[3].instructions[0].first << ", " << vans[3].instructions[0].second << L") \n";
+			//}
+			//std::wcout << L"Van 4 location: (" << vans[4].location.first << ", " << vans[4].location.second << L"), cargo: " << vans[4].cargo;
+			//if (vans[4].instructions.size() > 0) {
+			//	std::wcout << ", instructions: (" << vans[4].instructions[0].first << ", " << vans[4].instructions[0].second << L") \n";
+			//}
 
 			std::wcout << L"Packages on board: " << waitingDeliveries.size() + activeDeliveries.size() << L"\n";
-			std::wcout << L"Completed deliveries: " << completedDeliveries.size() << L"\n";
+			std::wcout << L"Completed deliveries: " << completedDeliveries.size() << L"\n\n";
 
-			for(int i=0;i<waitingDeliveries.size();i++) {
-				std::wcout << L"Package " << waitingDeliveries[i].Number << " location: " << waitingDeliveries[i].pickUp.first << ", " << waitingDeliveries[i].pickUp.second << L"\n";
-			}
+			//for(int i=0;i<waitingDeliveries.size();i++) {
+			//	std::wcout << L"Package " << waitingDeliveries[i].Number << " location: " << waitingDeliveries[i].pickUp.first << ", " << waitingDeliveries[i].pickUp.second << L"\n";
+			//}
 
 			if(once) {
 				spread();
@@ -687,6 +668,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 			waitingDeliveries.clear();
 			activeDeliveries.clear();
+			compDeliveries = completedDeliveries.size();
 			completedDeliveries.clear();
 			edges.clear();
 			vans.clear();
